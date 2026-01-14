@@ -1,0 +1,9 @@
+# Cloudflare Pages 配置文件
+# 这个文件可以帮助 Cloudflare Pages 正确识别 Next.js 项目
+
+[build]
+command = "npm install && npm run build"
+cwd = "."
+
+[env.production]
+NODE_VERSION = "20"
