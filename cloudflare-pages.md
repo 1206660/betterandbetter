@@ -20,9 +20,10 @@
 - **Project name**: `betterandbetter`（或自定义）
 - **Production branch**: `main`
 - **Framework preset**: `Next.js`
-- **Build command**: `npm run build`
+- **Build command**: `npm install && npm run build`
 - **Build output directory**: `.next`
-- **Root directory**: `betterandbetter`（如果项目在子目录，留空如果项目在根目录）
+- **Root directory**: （留空，项目在根目录）
+- **Node version**: `20`（在 Environment variables 中添加 `NODE_VERSION=20`）
 
 ### 4. 配置环境变量
 
