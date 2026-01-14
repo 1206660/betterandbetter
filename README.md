@@ -1,5 +1,7 @@
 # BetterAndBetter - 家庭健康提醒应用
 
+**GitHub**: https://github.com/1206660/betterandbetter
+
 一个为老年人设计的健康提醒应用，包含 Pad 端展示页面和后端管理页面。
 
 ## 技术栈

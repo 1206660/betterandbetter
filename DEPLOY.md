@@ -1,5 +1,7 @@
 # 部署指南
 
+**GitHub 仓库**: https://github.com/1206660/betterandbetter.git
+
 ## 快速部署
 
 ### 一键部署（Windows）

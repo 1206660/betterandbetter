@@ -1,5 +1,7 @@
 # 国内部署方案
 
+**GitHub 仓库**: https://github.com/1206660/betterandbetter.git
+
 由于 Vercel 在国内访问受限，以下是几个可行的替代方案：
 
 ## 方案一：Cloudflare Pages（推荐，免费）
