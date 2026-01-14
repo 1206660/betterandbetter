@@ -20,19 +20,18 @@
 - **Project name**: `betterandbetter`（或自定义）
 - **Production branch**: `main`
 - **Framework preset**: `Next.js`
-- **Build command**: `npm install && npm run build`
+- **Build command**: `npm install --legacy-peer-deps && npm run build`
 - **Build output directory**: `.next`
 - **Root directory**: （留空，项目在根目录）
+- **Install command**: （留空，让 Cloudflare 使用默认安装）
 
-**重要**：如果遇到 `npm ci` 错误，请使用以下构建命令：
-```
-npm install && npm run build
-```
+**重要**：如果遇到 `npm ci` 错误：
+1. 确保 Build command 使用 `npm install` 而不是 `npm ci`
+2. 添加 `--legacy-peer-deps` 标志
+3. 或者使用构建脚本：`bash _cloudflare_build.sh`
 
-或者使用构建脚本：
-```
-bash _cloudflare_build.sh
-```
+**环境变量**（可选）：
+- `NPM_FLAGS`: `--legacy-peer-deps`
 
 ### 4. 配置环境变量
 
