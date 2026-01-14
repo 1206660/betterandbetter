@@ -1,19 +1,27 @@
 # Cloudflare Pages 部署指南
 
+## ⚠️ 重要：使用 Pages，不是 Workers
+
+**Next.js 项目必须使用 Cloudflare Pages，不是 Workers！**
+
+- ❌ Workers：用于运行 JavaScript 函数，不适合 Next.js
+- ✅ Pages：用于部署 Next.js、静态网站等
+
 ## 快速部署（推荐，国内可访问）
 
 ### 1. 访问 Cloudflare Dashboard
 
 访问：https://dash.cloudflare.com
 
-### 2. 创建 Pages 项目
+### 2. 创建 Pages 项目（重要：选择 Pages）
 
-1. 点击左侧菜单 "Workers & Pages"
-2. 点击 "Create application"
-3. 选择 "Pages" > "Connect to Git"
-4. 选择 GitHub，授权访问
-5. 选择仓库：`1206660/betterandbetter`
-6. 点击 "Begin setup"
+1. 点击左侧菜单 **"Workers 和 Pages"** (Workers and Pages)
+2. 点击 **"创建应用程序"** (Create application)
+3. **重要**：选择 **"Pages"**（不是 Workers！）
+4. 选择 **"连接到 Git"** (Connect to Git)
+5. 选择 GitHub，授权访问
+6. 选择仓库：`1206660/betterandbetter`
+7. 点击 **"开始设置"** (Begin setup)
 
 ### 3. 配置构建设置
 
