@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   images: isCloudflarePages ? {
     unoptimized: true,
   } : undefined,
+  // 明确指定需要在构建时注入的环境变量
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  },
 };
 
 export default nextConfig;
