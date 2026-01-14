@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Reminder } from '@/lib/types'
 import { ReminderCard } from '@/components/display/ReminderCard'
 import { Calendar, RefreshCw, Wifi, WifiOff } from 'lucide-react'
 import { cacheReminders, getCachedReminders } from '@/lib/offline'
+import { getVoiceService } from '@/lib/voice'
 
 export default function DisplayPage() {
   const [reminders, setReminders] = useState<Reminder[]>([])
@@ -21,8 +22,21 @@ export default function DisplayPage() {
     day: 'numeric',
     weekday: 'long',
   }))
+  
+  // 语音播报相关
+  const spokenRemindersRef = useRef<Set<string>>(new Set()) // 已播报的提醒ID集合
+  const voiceServiceRef = useRef<ReturnType<typeof getVoiceService> | null>(null)
 
-  // 更新当前时间
+  // 初始化语音服务
+  useEffect(() => {
+    try {
+      voiceServiceRef.current = getVoiceService()
+    } catch (error) {
+      console.warn('语音服务初始化失败:', error)
+    }
+  }, [])
+
+  // 更新当前时间并检查是否需要自动播报
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date()
@@ -40,10 +54,62 @@ export default function DisplayPage() {
           weekday: 'long',
         })
       )
+
+      // 检查是否需要自动播报
+      checkAndSpeakReminders(now)
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [])
+  }, [reminders])
+
+  // 检查并播报提醒
+  const checkAndSpeakReminders = (now: Date) => {
+    if (!voiceServiceRef.current || !voiceServiceRef.current.isSupported()) {
+      return
+    }
+
+    const currentMinutes = now.getHours() * 60 + now.getMinutes()
+
+    reminders.forEach((reminder) => {
+      if (!reminder.is_active) return
+
+      reminder.time_slots.forEach((slot) => {
+        const [hour, minute] = slot.time.split(':').map(Number)
+        const slotMinutes = hour * 60 + minute
+        const diff = Math.abs(slotMinutes - currentMinutes)
+
+        // 在提醒时间 ±2 分钟内自动播报（避免重复播报）
+        if (diff <= 2) {
+          const reminderKey = `${reminder.id}-${slot.time}`
+          
+          // 如果已经播报过，跳过
+          if (spokenRemindersRef.current.has(reminderKey)) {
+            return
+          }
+
+          // 标记为已播报
+          spokenRemindersRef.current.add(reminderKey)
+
+          // 延迟 1 秒后播报，避免页面加载时立即播报
+          setTimeout(() => {
+            voiceServiceRef.current?.speakReminder(
+              reminder.title,
+              reminder.type,
+              slot.time,
+              reminder.description
+            ).catch((error) => {
+              console.error('自动播报失败:', error)
+            })
+          }, 1000)
+
+          // 30 分钟后清除标记，允许重新播报
+          setTimeout(() => {
+            spokenRemindersRef.current.delete(reminderKey)
+          }, 30 * 60 * 1000)
+        }
+      })
+    })
+  }
 
   // 获取今日提醒（静默刷新，不显示加载状态）
   const fetchReminders = async (silent = false) => {

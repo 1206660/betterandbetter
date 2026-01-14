@@ -2,6 +2,7 @@
 
 import { Reminder, TimeSlot } from '@/lib/types'
 import { Clock, Pill, Stethoscope, TestTube, AlertCircle } from 'lucide-react'
+import { VoiceButton } from './VoiceButton'
 
 interface ReminderCardProps {
   reminder: Reminder
@@ -191,7 +192,16 @@ export function ReminderCard({ reminder, currentTime }: ReminderCardProps) {
               </span>
             )}
           </div>
-          <h3 className="text-xl font-bold mb-1">{reminder.title}</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-xl font-bold flex-1">{reminder.title}</h3>
+            {nearestSlot && (
+              <VoiceButton
+                text={`现在是${nearestSlot.time}，${typeLabel}提醒：${reminder.title}${reminder.description ? `。${reminder.description}` : ''}`}
+                size="md"
+                className="flex-shrink-0"
+              />
+            )}
+          </div>
           {reminder.description && (
             <p className="text-sm opacity-80 line-clamp-1">{reminder.description}</p>
           )}
