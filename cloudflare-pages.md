@@ -23,7 +23,16 @@
 - **Build command**: `npm install && npm run build`
 - **Build output directory**: `.next`
 - **Root directory**: （留空，项目在根目录）
-- **Node version**: `20`（在 Environment variables 中添加 `NODE_VERSION=20`）
+
+**重要**：如果遇到 `npm ci` 错误，请使用以下构建命令：
+```
+npm install && npm run build
+```
+
+或者使用构建脚本：
+```
+bash _cloudflare_build.sh
+```
 
 ### 4. 配置环境变量
 
