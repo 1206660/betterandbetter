@@ -5,5 +5,8 @@
 command = "npm install && npm run build"
 cwd = "."
 
+# 指定构建输出目录（用于静态导出）
+pages_build_output_dir = "out"
+
 [env.production]
 NODE_VERSION = "20"
