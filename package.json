@@ -10,10 +10,9 @@
     "deploy": "vercel --prod",
     "deploy:preview": "vercel",
     "build:docker": "DOCKER_BUILD=true npm run build",
+    "build:cloudflare": "CLOUDFLARE_PAGES=true npm run build",
     "docker:build": "docker build -t betterandbetter:latest .",
-    "docker:run": "docker run -p 3000:3000 --env-file .env.local betterandbetter:latest",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:deploy": "npm run pages:build && wrangler pages deploy .vercel/output/static"
+    "docker:run": "docker run -p 3000:3000 --env-file .env.local betterandbetter:latest"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
