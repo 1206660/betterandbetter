@@ -36,6 +36,64 @@ export default function DisplayPage() {
     }
   }, [])
 
+  // 防止页面休眠（Kiosk 模式优化）
+  useEffect(() => {
+    // 使用 Wake Lock API 防止屏幕休眠
+    let wakeLock: WakeLockSentinel | null = null
+
+    const requestWakeLock = async () => {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen')
+          console.log('✓ 屏幕常亮已启用')
+          
+          wakeLock.addEventListener('release', () => {
+            console.log('屏幕常亮已释放')
+          })
+        } catch (err) {
+          console.warn('无法启用屏幕常亮:', err)
+        }
+      }
+    }
+
+    // 页面可见时请求 Wake Lock
+    if (document.visibilityState === 'visible') {
+      requestWakeLock()
+    }
+
+    // 页面重新可见时重新请求
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && !wakeLock) {
+        await requestWakeLock()
+        // 重新获取数据
+        fetchReminders(true)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // 定期重新请求 Wake Lock（某些浏览器会自动释放）
+    const wakeLockInterval = setInterval(async () => {
+      if (wakeLock && document.visibilityState === 'visible') {
+        try {
+          await wakeLock.request()
+        } catch (err) {
+          // 如果失败，尝试重新创建
+          wakeLock = null
+          await requestWakeLock()
+        }
+      }
+    }, 30000) // 每 30 秒检查一次
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(wakeLockInterval)
+      if (wakeLock) {
+        wakeLock.release().catch(() => {})
+      }
+    }
+  }, [])
+
   // 更新当前时间并检查是否需要自动播报
   useEffect(() => {
     const timer = setInterval(() => {
