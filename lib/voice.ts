@@ -45,7 +45,17 @@ export class VoiceService {
    * 检查浏览器是否支持语音合成
    */
   isSupported(): boolean {
-    return 'speechSynthesis' in window
+    if (typeof window === 'undefined') {
+      return false
+    }
+    // 基础检查：是否存在 speechSynthesis API
+    const hasAPI = 'speechSynthesis' in window
+    if (!hasAPI) {
+      return false
+    }
+    // 移动设备上，即使语音列表为空也可能支持（需要用户交互后加载）
+    // 所以只要有 API 就返回 true
+    return true
   }
 
   /**
