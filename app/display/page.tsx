@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Reminder } from '@/lib/types'
 import { ReminderCard } from '@/components/display/ReminderCard'
 import { Calendar, RefreshCw, Wifi, WifiOff } from 'lucide-react'
 import { cacheReminders, getCachedReminders } from '@/lib/offline'
-import { getVoiceService } from '@/lib/voice'
 import { APP_VERSION } from '@/lib/version'
 
 export default function DisplayPage() {
@@ -16,6 +15,7 @@ export default function DisplayPage() {
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
   }))
   const [currentDate, setCurrentDate] = useState(new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -24,18 +24,6 @@ export default function DisplayPage() {
     weekday: 'long',
   }))
   
-  // 语音播报相关
-  const spokenRemindersRef = useRef<Set<string>>(new Set()) // 已播报的提醒ID集合
-  const voiceServiceRef = useRef<ReturnType<typeof getVoiceService> | null>(null)
-
-  // 初始化语音服务
-  useEffect(() => {
-    try {
-      voiceServiceRef.current = getVoiceService()
-    } catch (error) {
-      console.warn('语音服务初始化失败:', error)
-    }
-  }, [])
 
   // 防止页面休眠（Kiosk 模式优化）
   useEffect(() => {
@@ -103,6 +91,7 @@ export default function DisplayPage() {
         now.toLocaleTimeString('zh-CN', {
           hour: '2-digit',
           minute: '2-digit',
+          second: '2-digit',
         })
       )
       setCurrentDate(
@@ -114,61 +103,11 @@ export default function DisplayPage() {
         })
       )
 
-      // 检查是否需要自动播报
-      checkAndSpeakReminders(now)
     }, 1000)
 
     return () => clearInterval(timer)
   }, [reminders])
 
-  // 检查并播报提醒
-  const checkAndSpeakReminders = (now: Date) => {
-    if (!voiceServiceRef.current || !voiceServiceRef.current.isSupported()) {
-      return
-    }
-
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
-
-    reminders.forEach((reminder) => {
-      if (!reminder.is_active) return
-
-      reminder.time_slots.forEach((slot) => {
-        const [hour, minute] = slot.time.split(':').map(Number)
-        const slotMinutes = hour * 60 + minute
-        const diff = Math.abs(slotMinutes - currentMinutes)
-
-        // 在提醒时间 ±2 分钟内自动播报（避免重复播报）
-        if (diff <= 2) {
-          const reminderKey = `${reminder.id}-${slot.time}`
-          
-          // 如果已经播报过，跳过
-          if (spokenRemindersRef.current.has(reminderKey)) {
-            return
-          }
-
-          // 标记为已播报
-          spokenRemindersRef.current.add(reminderKey)
-
-          // 延迟 1 秒后播报，避免页面加载时立即播报
-          setTimeout(() => {
-            voiceServiceRef.current?.speakReminder(
-              reminder.title,
-              reminder.type,
-              slot.time,
-              reminder.description
-            ).catch((error) => {
-              console.error('自动播报失败:', error)
-            })
-          }, 1000)
-
-          // 30 分钟后清除标记，允许重新播报
-          setTimeout(() => {
-            spokenRemindersRef.current.delete(reminderKey)
-          }, 30 * 60 * 1000)
-        }
-      })
-    })
-  }
 
   // 获取今日提醒（静默刷新，不显示加载状态）
   const fetchReminders = async (silent = false) => {
@@ -399,75 +338,73 @@ export default function DisplayPage() {
   })
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* 头部 - 紧凑设计，强化时间显示 */}
-        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-          <div className="flex items-center gap-4">
-            <Calendar className="w-6 h-6 text-primary flex-shrink-0" />
-            <div className="flex-1">
-              <div className="text-sm font-medium text-muted-foreground mb-1">{currentDate}</div>
-              {/* 强化时间显示 */}
-              <div className="relative inline-block">
-                <div className="text-5xl md:text-6xl font-bold text-primary animate-time-glow leading-none">
-                  {currentTime}
-                </div>
-                {/* 时间背景光效 */}
-                <div className="absolute inset-0 bg-primary/20 blur-xl -z-10 animate-pulse rounded-lg"></div>
+    <div className="min-h-screen bg-white text-black p-2 md:p-3">
+      <div className="max-w-7xl mx-auto h-screen flex flex-col">
+        {/* 头部 - 放大日期和时间，同一行 */}
+        <div className="mb-3 flex items-center justify-between border-b border-black/20 pb-3">
+          <div className="flex items-center gap-4 flex-1">
+            <Calendar className="w-6 h-6 text-black flex-shrink-0" />
+            <div className="flex items-center gap-4 flex-1">
+              <div className="text-2xl md:text-3xl font-bold text-black leading-none">
+                {currentDate}
+              </div>
+              <div className="text-5xl md:text-6xl font-bold text-black leading-none">
+                {currentTime}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1">
               {isOnline ? (
-                <Wifi className="w-4 h-4 text-green-500" />
+                <Wifi className="w-3 h-3 text-green-600" />
               ) : (
-                <WifiOff className="w-4 h-4 text-orange-500" />
+                <WifiOff className="w-3 h-3 text-orange-600" />
               )}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-black/70">
                 {isOnline ? '在线' : '离线'}
               </span>
             </div>
             <button
               onClick={() => fetchReminders(false)}
               disabled={!isOnline}
-              className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="px-2 py-1 rounded bg-black/10 text-black hover:bg-black/20 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
               aria-label="刷新提醒"
               aria-disabled={!isOnline}
             >
-              <RefreshCw className="w-4 h-4" />
-              <span className="text-sm">刷新</span>
+              <RefreshCw className="w-3 h-3" />
             </button>
           </div>
         </div>
 
-        {/* 提醒列表 */}
-        {loading && reminders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-2xl text-muted-foreground">加载中...</div>
-          </div>
-        ) : sortedReminders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-2xl text-muted-foreground mb-2">暂无提醒</div>
-            <div className="text-lg text-muted-foreground/70">
-              请在管理页面添加提醒
+        {/* 提醒列表 - 紧凑布局，16:9显示6项 */}
+        <div className="flex-1 overflow-y-auto">
+          {loading && reminders.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-xl text-black/70">加载中...</div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {sortedReminders.map((reminder) => (
-              <ReminderCard
-                key={reminder.id}
-                reminder={reminder}
-                currentTime={currentTime}
-              />
-            ))}
-          </div>
-        )}
+          ) : sortedReminders.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-xl text-black/70 mb-2">暂无提醒</div>
+              <div className="text-sm text-black/50">
+                请在管理页面添加提醒
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sortedReminders.map((reminder) => (
+                <ReminderCard
+                  key={reminder.id}
+                  reminder={reminder}
+                  currentTime={currentTime}
+                />
+              ))}
+            </div>
+          )}
+        </div>
         
         {/* 版本号 - 不显眼的位置 */}
-        <div className="mt-8 pt-4 border-t border-border/50 text-center">
-          <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
+        <div className="mt-2 pt-1 border-t border-black/10 text-center">
+          <span className="text-xs text-black/30">v{APP_VERSION}</span>
         </div>
       </div>
     </div>

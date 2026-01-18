@@ -2,7 +2,6 @@
 
 import { Reminder, TimeSlot } from '@/lib/types'
 import { Clock, Pill, Stethoscope, TestTube, AlertCircle } from 'lucide-react'
-import { VoiceButton } from './VoiceButton'
 
 interface ReminderCardProps {
   reminder: Reminder
@@ -83,58 +82,58 @@ export function ReminderCard({ reminder, currentTime }: ReminderCardProps) {
   const isUpcoming = status === 'upcoming'
   const isPast = status === 'past'
 
-  // 根据状态确定样式
+  // 根据状态确定样式 - 白底黑字风格
   const getCardStyle = () => {
     if (isActive) {
-      return 'bg-primary text-primary-foreground border-primary shadow-lg ring-4 ring-primary/30'
+      return 'bg-black text-white border-black shadow-lg'
     } else if (isUpcoming) {
-      return 'bg-accent text-accent-foreground border-accent shadow-md ring-2 ring-accent/50 animate-pulse'
+      return 'bg-black/20 text-black border-black/40'
     } else if (isPast) {
-      return 'bg-muted text-muted-foreground border-muted-foreground/30 opacity-60'
+      return 'bg-white text-black/40 border-black/10 opacity-50'
     }
-    return 'bg-card text-card-foreground border-border'
+    return 'bg-white text-black border-black/20'
   }
 
   // 根据状态确定时间样式
   const getTimeStyle = () => {
     if (isActive) {
-      return 'text-primary-foreground'
+      return 'text-white'
     } else if (isUpcoming) {
-      return 'text-accent-foreground'
+      return 'text-black'
     } else if (isPast) {
-      return 'text-muted-foreground line-through'
+      return 'text-black/40 line-through'
     }
-    return 'text-primary'
+    return 'text-black'
   }
 
   return (
     <div
-      className={`rounded-xl p-4 border-2 transition-all duration-300 ${getCardStyle()}`}
+      className={`rounded-lg p-4 border-2 transition-all duration-200 ${getCardStyle()}`}
       role="article"
       aria-label={`提醒: ${reminder.title}`}
     >
       <div className="flex items-center gap-4">
-        {/* 时间显示 - 强化 */}
-        <div className={`flex-shrink-0 text-center min-w-[100px] ${getTimeStyle()}`}>
+        {/* 时间显示 - 放大一倍 */}
+        <div className={`flex-shrink-0 text-center min-w-[140px] ${getTimeStyle()}`}>
           {nearestSlot && (
             <>
-              <div className={`text-3xl font-bold leading-tight ${getTimeStyle()}`}>
+              <div className={`text-4xl font-bold leading-tight ${getTimeStyle()}`}>
                 {nearestSlot.time}
               </div>
               {reminder.time_slots.length > 1 && (
-                <div className="text-xs mt-1 opacity-70">
-                  +{reminder.time_slots.length - 1}个
+                <div className="text-sm mt-1 opacity-70">
+                  +{reminder.time_slots.length - 1}
                 </div>
               )}
               {/* 状态标签 */}
               {isActive && (
-                <div className="text-xs mt-1 font-bold animate-pulse">现在</div>
+                <div className="text-sm mt-1 font-bold">现在</div>
               )}
               {isUpcoming && (
-                <div className="text-xs mt-1 font-bold">即将</div>
+                <div className="text-sm mt-1 font-bold">即将</div>
               )}
               {isPast && (
-                <div className="text-xs mt-1">已过</div>
+                <div className="text-sm mt-1">已过</div>
               )}
             </>
           )}
@@ -142,75 +141,41 @@ export function ReminderCard({ reminder, currentTime }: ReminderCardProps) {
 
         {/* 图标 */}
         <div
-          className={`flex-shrink-0 p-2 rounded-lg ${
+          className={`flex-shrink-0 p-3 rounded ${
             isActive
-              ? 'bg-primary-foreground/20'
+              ? 'bg-white/20'
               : isUpcoming
-              ? 'bg-accent-foreground/20'
+              ? 'bg-black/20'
               : isPast
-              ? 'bg-muted-foreground/20'
-              : 'bg-muted'
+              ? 'bg-black/10'
+              : 'bg-black/10'
           }`}
         >
           <Icon
-            className={`w-6 h-6 ${
+            className={`w-8 h-8 ${
               isActive
-                ? 'text-primary-foreground'
+                ? 'text-white'
                 : isUpcoming
-                ? 'text-accent-foreground'
+                ? 'text-black'
                 : isPast
-                ? 'text-muted-foreground'
-                : 'text-primary'
+                ? 'text-black/40'
+                : 'text-black'
             }`}
           />
         </div>
 
-        {/* 内容 */}
+        {/* 内容 - 放大一倍，去掉类型标签 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded ${
-                isActive
-                  ? 'bg-primary-foreground/20'
-                  : isUpcoming
-                  ? 'bg-accent-foreground/20'
-                  : isPast
-                  ? 'bg-muted-foreground/20'
-                  : 'bg-muted'
-              }`}
-            >
-              {typeLabel}
-            </span>
-            {isUpcoming && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-accent-foreground/30 animate-pulse">
-                即将到来
-              </span>
-            )}
-            {isPast && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted-foreground/30">
-                已过期
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-xl font-bold flex-1">{reminder.title}</h3>
-            {nearestSlot && (
-              <VoiceButton
-                text={`现在是${nearestSlot.time}，${typeLabel}提醒：${reminder.title}${reminder.description ? `。${reminder.description}` : ''}`}
-                size="md"
-                className="flex-shrink-0"
-              />
-            )}
-          </div>
+          <h3 className="text-2xl font-bold leading-tight">{reminder.title}</h3>
           {reminder.description && (
-            <p className="text-sm opacity-80 line-clamp-1">{reminder.description}</p>
+            <p className="text-base opacity-70 line-clamp-1 mt-1">{reminder.description}</p>
           )}
-          {/* 所有时间点 */}
+          {/* 所有时间点 - 放大一倍 */}
           {reminder.time_slots.length > 1 && (
             <div className="mt-2 flex flex-wrap gap-2">
               {reminder.time_slots.slice(1).map((slot, index) => (
-                <div key={index} className="flex items-center gap-1 text-sm opacity-80">
-                  <Clock className="w-3 h-3" />
+                <div key={index} className="flex items-center gap-1 text-sm opacity-70">
+                  <Clock className="w-5 h-5" />
                   <span className="font-medium">{slot.time}</span>
                   {slot.label && (
                     <span className="text-xs">({slot.label})</span>
