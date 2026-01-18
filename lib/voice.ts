@@ -21,15 +21,39 @@ export class VoiceService {
     if (typeof window === 'undefined') {
       throw new Error('VoiceService 只能在浏览器环境中使用')
     }
+    
+    // 检查 speechSynthesis 是否存在
+    if (!window.speechSynthesis) {
+      throw new Error('浏览器不支持 speechSynthesis API')
+    }
+    
     this.synth = window.speechSynthesis
+    
+    // 验证 synth 是否有效
+    if (!this.synth) {
+      throw new Error('无法获取 speechSynthesis 实例')
+    }
 
     // 加载可用语音列表
-    this.loadVoices()
+    try {
+      this.loadVoices()
+    } catch (error) {
+      console.warn('[VoiceService] 初始加载语音列表失败:', error)
+      // 不抛出错误，允许后续重试
+    }
 
     // 某些浏览器需要延迟加载语音
-    if (this.voices.length === 0) {
-      this.synth.onvoiceschanged = () => {
-        this.loadVoices()
+    if (this.voices.length === 0 && this.synth) {
+      try {
+        this.synth.onvoiceschanged = () => {
+          try {
+            this.loadVoices()
+          } catch (error) {
+            console.warn('[VoiceService] onvoiceschanged 加载失败:', error)
+          }
+        }
+      } catch (error) {
+        console.warn('[VoiceService] 设置 onvoiceschanged 失败:', error)
       }
     }
   }
@@ -38,7 +62,18 @@ export class VoiceService {
    * 加载可用语音列表
    */
   private loadVoices(): void {
-    this.voices = this.synth.getVoices()
+    try {
+      if (!this.synth) {
+        console.warn('[VoiceService] synth 未初始化，无法加载语音列表')
+        this.voices = []
+        return
+      }
+      this.voices = this.synth.getVoices() || []
+      console.log('[VoiceService] 加载了', this.voices.length, '个语音')
+    } catch (error) {
+      console.error('[VoiceService] loadVoices 失败:', error)
+      this.voices = []
+    }
   }
 
   /**
@@ -53,6 +88,18 @@ export class VoiceService {
     if (!hasAPI) {
       return false
     }
+    // 检查 speechSynthesis 对象是否有效
+    try {
+      const synth = window.speechSynthesis
+      if (!synth) {
+        return false
+      }
+      // 尝试调用 getVoices（某些浏览器需要这个来激活）
+      synth.getVoices()
+    } catch (error) {
+      console.warn('[VoiceService] isSupported 检查失败:', error)
+      return false
+    }
     // 移动设备上，即使语音列表为空也可能支持（需要用户交互后加载）
     // 所以只要有 API 就返回 true
     return true
@@ -63,10 +110,14 @@ export class VoiceService {
    */
   getVoices(): SpeechSynthesisVoice[] {
     try {
+      if (!this.synth) {
+        console.warn('[VoiceService] synth 未初始化')
+        return []
+      }
       if (this.voices.length === 0) {
         this.loadVoices()
       }
-      return this.voices
+      return this.voices || []
     } catch (error) {
       console.error('[VoiceService] getVoices 失败:', error)
       return []
@@ -93,6 +144,12 @@ export class VoiceService {
     return new Promise((resolve, reject) => {
       if (!this.isSupported()) {
         reject(new Error('浏览器不支持语音合成'))
+        return
+      }
+
+      // 检查 synth 是否有效
+      if (!this.synth) {
+        reject(new Error('语音合成服务未初始化'))
         return
       }
 
@@ -125,6 +182,11 @@ export class VoiceService {
     resolve: () => void,
     reject: (error: Error) => void
   ): void {
+    if (!this.synth) {
+      reject(new Error('语音合成服务未初始化'))
+      return
+    }
+
     const utterance = new SpeechSynthesisUtterance(text)
 
     // 设置默认选项
