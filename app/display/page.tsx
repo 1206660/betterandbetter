@@ -7,6 +7,7 @@ import { ReminderCard } from '@/components/display/ReminderCard'
 import { Calendar, RefreshCw, Wifi, WifiOff } from 'lucide-react'
 import { cacheReminders, getCachedReminders } from '@/lib/offline'
 import { getVoiceService } from '@/lib/voice'
+import { APP_VERSION } from '@/lib/version'
 
 export default function DisplayPage() {
   const [reminders, setReminders] = useState<Reminder[]>([])
@@ -463,6 +464,11 @@ export default function DisplayPage() {
             ))}
           </div>
         )}
+        
+        {/* 版本号 - 不显眼的位置 */}
+        <div className="mt-8 pt-4 border-t border-border/50 text-center">
+          <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
+        </div>
       </div>
     </div>
   )

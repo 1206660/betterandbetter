@@ -21,53 +21,45 @@ export function VoiceButton({ text, className = '', size = 'md' }: VoiceButtonPr
       return
     }
     
-    // 检查基础支持
+    // 检查基础支持 - 只要有 speechSynthesis API 就显示按钮
+    // 移动设备上即使语音列表为空也可能支持（需要用户交互后加载）
     const hasBasicSupport = 'speechSynthesis' in window
     
-    if (!hasBasicSupport) {
-      setIsSupported(false)
-      return
-    }
-    
-    // 移动设备上，语音列表可能需要延迟加载
-    // 先设置为支持，然后尝试加载语音服务
-    setIsSupported(true)
-    
-    // 延迟检查，等待语音列表加载（移动设备可能需要更长时间）
-    const checkVoiceSupport = () => {
-      try {
-        const voiceService = getVoiceService()
-        // 即使语音列表为空，也显示按钮（某些移动浏览器需要用户交互后才加载语音）
-        // 用户点击时会尝试播放，如果失败会显示提示
-        const voices = voiceService.getVoices()
-        console.log('可用语音数量:', voices.length)
-        // 在移动设备上，即使没有语音也显示按钮，让用户尝试
-        setIsSupported(true)
-      } catch (error) {
-        console.warn('语音服务初始化失败:', error)
-        // 即使初始化失败，如果浏览器支持 speechSynthesis，也显示按钮
-        setIsSupported(hasBasicSupport)
+    if (hasBasicSupport) {
+      // 立即显示按钮，不等待语音列表加载
+      setIsSupported(true)
+      console.log('✅ 语音功能已启用')
+      
+      // 异步尝试加载语音服务（不影响按钮显示）
+      const checkVoiceSupport = () => {
+        try {
+          const voiceService = getVoiceService()
+          const voices = voiceService.getVoices()
+          console.log('可用语音数量:', voices.length)
+        } catch (error) {
+          console.warn('语音服务初始化失败:', error)
+          // 即使初始化失败，也保持按钮显示，让用户尝试
+        }
       }
-    }
-    
-    // 立即检查
-    checkVoiceSupport()
-    
-    // 延迟检查（移动设备可能需要更长时间加载语音列表）
-    const timer1 = setTimeout(checkVoiceSupport, 500)
-    const timer2 = setTimeout(checkVoiceSupport, 2000)
-    
-    // 监听语音列表变化事件
-    if (window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = checkVoiceSupport
-    }
-    
-    return () => {
-      clearTimeout(timer1)
-      clearTimeout(timer2)
+      
+      // 延迟检查（移动设备可能需要更长时间加载语音列表）
+      setTimeout(checkVoiceSupport, 100)
+      setTimeout(checkVoiceSupport, 500)
+      setTimeout(checkVoiceSupport, 2000)
+      
+      // 监听语音列表变化事件
       if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = null
+        window.speechSynthesis.onvoiceschanged = checkVoiceSupport
       }
+      
+      return () => {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.onvoiceschanged = null
+        }
+      }
+    } else {
+      setIsSupported(false)
+      console.log('❌ 浏览器不支持语音合成')
     }
   }, [])
 
