@@ -76,7 +76,7 @@ export default function DisplayPage() {
     const wakeLockInterval = setInterval(async () => {
       if (wakeLock && document.visibilityState === 'visible') {
         try {
-          await wakeLock.request()
+          wakeLock = await navigator.wakeLock.request('screen')
         } catch (err) {
           // 如果失败，尝试重新创建
           wakeLock = null
