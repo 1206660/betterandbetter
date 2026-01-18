@@ -15,10 +15,17 @@ export function VoiceButton({ text, className = '', size = 'md' }: VoiceButtonPr
   const [isSupported, setIsSupported] = useState(false)
 
   useEffect(() => {
+    // 确保只在客户端检查
+    if (typeof window === 'undefined') {
+      setIsSupported(false)
+      return
+    }
+    
     try {
       const voiceService = getVoiceService()
       setIsSupported(voiceService.isSupported())
     } catch (error) {
+      console.warn('语音服务初始化失败:', error)
       setIsSupported(false)
     }
   }, [])
